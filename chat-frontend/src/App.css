@@ -1,0 +1,56 @@
+/* Reset default margin and padding for the body, set font and base colors */
+body {
+    margin: 0;                                 /* Removes default margin from the browser */
+    padding: 0;                                /* Removes default padding from the browser */
+    font-family: 'Arial', sans-serif;          /* Sets font for the whole app */
+    background-color: #cadcfc;                 /* Light blue background color */
+    color: #00246b;                            /* Dark blue text color */
+}
+
+/* Styles the main app container */
+.App {
+    text-align: center;                        /* Center-aligns all content inside the App component */
+}
+
+/* Styles for the main heading */
+h1 {
+    color: #00246b;                            /* Dark blue heading color */
+}
+
+/* Styles for the unordered list */
+ul {
+    list-style-type: none;                     /* Removes bullet points */
+    padding: 0;                                /* Removes default padding */
+}
+
+/* Styles for each individual chat message (list item) */
+li {
+    background-color: #8ab6f9;                 /* Light blue background for messages */
+    margin: 5px;                               /* Adds space between messages */
+    padding: 10px;                             /* Adds space inside each message box */
+    border-radius: 5px;                        /* Rounded corners */
+}
+
+/* Styles for the input field */
+input {
+    padding: 10px;                             /* Adds internal space for better readability */
+    margin-right: 10px;                        /* Adds space between input field and button */
+    border: 1px solid #00246b;                 /* Dark blue border */
+    border-radius: 5px;                        /* Rounded corners */
+}
+
+/* Styles for the submit button */
+button {
+    padding: 10px;                             /* Adds internal space inside the button */
+    background-color: #00246b;                 /* Dark blue background */
+    color: #cadcfc;                            /* Light blue text */
+    border: none;                              /* No border */
+    border-radius: 5px;                        /* Rounded corners */
+    cursor: pointer;                           /* Changes cursor to pointer on hover */
+}
+
+/* Hover effect for the button to make it interactive */
+button:hover {
+    background-color: #8ab6f9;                 /* Changes background to light blue */
+    color: #00246b;                            /* Changes text color to dark blue */
+}
