@@ -1,56 +1,154 @@
-/* Reset default margin and padding for the body, set font and base colors */
 body {
-    margin: 0;                                 /* Removes default margin from the browser */
-    padding: 0;                                /* Removes default padding from the browser */
-    font-family: 'Arial', sans-serif;          /* Sets font for the whole app */
-    background-color: #cadcfc;                 /* Light blue background color */
-    color: #00246b;                            /* Dark blue text color */
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #cadcfc;
+    color: #00246b;
 }
 
-/* Styles the main app container */
-.App {
-    text-align: center;                        /* Center-aligns all content inside the App component */
+.chat-container {
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
 }
 
-/* Styles for the main heading */
-h1 {
-    color: #00246b;                            /* Dark blue heading color */
+h2 {
+    text-align: center;
 }
 
-/* Styles for the unordered list */
-ul {
-    list-style-type: none;                     /* Removes bullet points */
-    padding: 0;                                /* Removes default padding */
+/* Toggle for Dark Mode */
+.dark-toggle {
+    display: block;
+    margin: 10px auto 20px;
+    padding: 8px 16px;
+    background-color: #00246b;
+    color: #cadcfc;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
-/* Styles for each individual chat message (list item) */
-li {
-    background-color: #8ab6f9;                 /* Light blue background for messages */
-    margin: 5px;                               /* Adds space between messages */
-    padding: 10px;                             /* Adds space inside each message box */
-    border-radius: 5px;                        /* Rounded corners */
+.dark-toggle:hover {
+    background-color: #8ab6f9;
+    color: #00246b;
 }
 
-/* Styles for the input field */
-input {
-    padding: 10px;                             /* Adds internal space for better readability */
-    margin-right: 10px;                        /* Adds space between input field and button */
-    border: 1px solid #00246b;                 /* Dark blue border */
-    border-radius: 5px;                        /* Rounded corners */
+/* Chat List */
+.chat-box {
+    list-style: none;
+    padding: 0;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 2px solid #00246b;
+    border-radius: 10px;
+    background: #f0f8ff;
+    margin-bottom: 15px;
 }
 
-/* Styles for the submit button */
-button {
-    padding: 10px;                             /* Adds internal space inside the button */
-    background-color: #00246b;                 /* Dark blue background */
-    color: #cadcfc;                            /* Light blue text */
-    border: none;                              /* No border */
-    border-radius: 5px;                        /* Rounded corners */
-    cursor: pointer;                           /* Changes cursor to pointer on hover */
+/* Chat bubbles */
+.chat-bubble {
+    background-color: #8ab6f9;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 15px;
+    max-width: 70%;
+    word-wrap: break-word;
+    position: relative;
 }
 
-/* Hover effect for the button to make it interactive */
-button:hover {
-    background-color: #8ab6f9;                 /* Changes background to light blue */
-    color: #00246b;                            /* Changes text color to dark blue */
+.my-message {
+    background-color: #00246b;
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.timestamp {
+    font-size: 0.75em;
+    color: #555;
+    margin-top: 5px;
+}
+
+/* Input and Button */
+.chat-input-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+    padding: 10px 0;
+}
+
+.name-input, .message-input {
+    padding: 10px;
+    border: 1px solid #00246b;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+.name-input {
+    width: 150px;
+}
+
+.message-input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.send-button {
+    padding: 10px 16px;
+    background-color: #00246b;
+    color: #cadcfc;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.send-button:hover {
+    background-color: #8ab6f9;
+    color: #00246b;
+}
+
+/* Dark Mode Styling */
+.dark-mode {
+    background-color: #1e1e2f;
+    color: #e0e0e0;
+}
+
+.dark-mode .chat-box {
+    background-color: #2a2a3c;
+    border-color: #555;
+}
+
+.dark-mode .chat-bubble {
+    background-color: #444;
+    color: #fff;
+}
+
+.dark-mode .my-message {
+    background-color: #005f73;
+}
+
+.dark-mode .send-button,
+.dark-mode .dark-toggle {
+    background-color: #444;
+    color: #fff;
+}
+
+.dark-mode .send-button:hover,
+.dark-mode .dark-toggle:hover {
+    background-color: #888;
+    color: #000;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .chat-input-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .name-input, .message-input, .send-button {
+        width: 100%;
+    }
 }
