@@ -1,39 +1,71 @@
-// server.js
-const express = require('express');
-const cors = require('cors');
-const multer = require('multer');
-const path = require('path');
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const http = require("http");
+const { Server } = require("socket.io");
+const ChatMessage = require("./models/ChatMessage");
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.json({ limit: '10mb' }));
 
-const messages = [];
+mongoose.connect(process.env.MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("✅ Connected to MongoDB"))
+.catch(err => console.error("❌ MongoDB connection error:", err));
 
-// Multer for file upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-});
-const upload = multer({ storage });
-
-app.get('/messages', (req, res) => res.json(messages));
-
-app.post('/messages', upload.single('file'), (req, res) => {
-  const { name, message } = req.body;
-  const fileUrl = req.file ? `https://mernstack-chat-backend.onrender.com/uploads/${req.file.filename}` : null;
-
-  const newMessage = {
-    name,
-    message,
-    timestamp: new Date(),
-    fileUrl
-  };
-  messages.push(newMessage);
-  res.status(201).json({ success: true });
+app.get("/messages", async (req, res) => {
+  try {
+    const messages = await ChatMessage.find();
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.post("/messages", async (req, res) => {
+  try {
+    const { user, message, file, fileName } = req.body;
+
+    if (!user || (!message && !file)) {
+      return res.status(400).json({ error: "User and message or file are required" });
+    }
+
+    const chatMessage = new ChatMessage({ user, message, file, fileName });
+    await chatMessage.save();
+
+    io.emit("newMessage", chatMessage);
+    res.status(201).json(chatMessage);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log("🔌 A user connected");
+
+  socket.on("typing", (username) => {
+    socket.broadcast.emit("typing", username);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔌 A user disconnected");
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+});
