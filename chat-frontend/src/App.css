@@ -10,39 +10,50 @@ body {
     text-align: center;
 }
 
-h1, h2 {
+h2 {
     color: #00246b;
 }
 
 ul {
     list-style-type: none;
     padding: 0;
-    max-width: 600px;
-    margin: auto;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
 }
 
 li {
     background-color: #8ab6f9;
-    margin: 5px;
+    margin: 5px auto;
     padding: 10px;
+    width: 90%;
     border-radius: 5px;
     text-align: left;
 }
 
-input[type="text"] {
+.timestamp {
+    font-size: 0.8em;
+    color: gray;
+}
+
+.input-area {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    margin-left: 20px;
+    flex-wrap: wrap;
+}
+
+.input-area input[type="text"],
+.input-area input[type="file"] {
     padding: 10px;
-    margin: 5px 10px 5px 0;
     border: 1px solid #00246b;
     border-radius: 5px;
-    width: 180px;
 }
 
-input[type="file"] {
-    margin: 5px 10px;
-}
-
-button {
-    padding: 10px;
+.input-area button {
+    padding: 10px 15px;
     background-color: #00246b;
     color: #cadcfc;
     border: none;
@@ -50,28 +61,7 @@ button {
     cursor: pointer;
 }
 
-button:hover {
+.input-area button:hover {
     background-color: #8ab6f9;
     color: #00246b;
-}
-
-.chat-container {
-    max-width: 700px;
-    margin: auto;
-    padding: 20px;
-}
-
-.input-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.emoji-picker {
-    margin-top: 10px;
-    display: flex;
-    justify-content: center;
 }
