@@ -1,4 +1,3 @@
-// ===== FRONTEND: ChatRoom.js =====
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
@@ -10,7 +9,9 @@ const ChatRoom = () => {
   const [user, setUser] = useState('');
   const [message, setMessage] = useState('');
   const [typingUser, setTypingUser] = useState('');
+  const [darkMode, setDarkMode] = useState(false);
   const typingTimeout = useRef(null);
+  const messagesEndRef = useRef(null);
 
   const fetchMessages = async () => {
     try {
@@ -24,7 +25,7 @@ const ChatRoom = () => {
 
   const sendMessage = async () => {
     if (!user.trim() || !message.trim()) {
-      alert("Both user and message are required.");
+      alert("Both name and message are required.");
       return;
     }
 
@@ -41,9 +42,7 @@ const ChatRoom = () => {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      sendMessage();
-    }
+    if (e.key === 'Enter') sendMessage();
   };
 
   useEffect(() => {
@@ -55,9 +54,7 @@ const ChatRoom = () => {
 
     socket.on("typing", (username) => {
       setTypingUser(username);
-      if (typingTimeout.current) {
-        clearTimeout(typingTimeout.current);
-      }
+      if (typingTimeout.current) clearTimeout(typingTimeout.current);
       typingTimeout.current = setTimeout(() => setTypingUser(''), 2000);
     });
 
@@ -67,30 +64,42 @@ const ChatRoom = () => {
     };
   }, []);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   return (
-    <div className="chat-container">
+    <div className={`chat-container ${darkMode ? 'dark-mode' : ''}`}>
       <h2>Dalvik Chat Messenger</h2>
-      <ul>
+
+      <button className="dark-toggle" onClick={() => setDarkMode(!darkMode)}>
+        {darkMode ? '🌞 Light Mode' : '🌙 Dark Mode'}
+      </button>
+
+      <ul className="chat-box">
         {messages.map((msg) => (
-          <li key={msg._id}>
+          <li key={msg._id} className={`chat-bubble ${msg.user === user ? 'my-message' : ''}`}>
             <strong>{msg.user}:</strong> {msg.message}
-            <div style={{ fontSize: "0.8em", color: "gray" }}>
+            <div className="timestamp">
               {new Date(msg.createdAt).toLocaleTimeString()}
             </div>
           </li>
         ))}
+        <div ref={messagesEndRef}></div>
       </ul>
 
       {typingUser && <p><em>{typingUser} is typing...</em></p>}
 
-      <div>
+      <div className="chat-input-row">
         <input
+          className="name-input"
           type="text"
           placeholder="Your name"
           value={user}
           onChange={(e) => setUser(e.target.value)}
         />
         <input
+          className="message-input"
           type="text"
           placeholder="Type your message..."
           value={message}
@@ -100,7 +109,7 @@ const ChatRoom = () => {
           }}
           onKeyDown={handleKeyPress}
         />
-        <button onClick={sendMessage}>Send</button>
+        <button className="send-button" onClick={sendMessage}>Send</button>
       </div>
     </div>
   );
