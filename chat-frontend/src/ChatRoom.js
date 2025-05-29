@@ -69,7 +69,7 @@ const ChatRoom = () => {
 
   return (
     <div className="chat-container">
-      <h2>Chat Room</h2>
+      <h2>Dalvik Chat Messenger</h2>
       <ul>
         {messages.map((msg) => (
           <li key={msg._id}>
