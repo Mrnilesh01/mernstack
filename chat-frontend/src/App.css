@@ -1,52 +1,85 @@
-body {
+html, body {
     margin: 0;
     padding: 0;
+    height: 100%;
     font-family: 'Arial', sans-serif;
     background-color: #cadcfc;
     color: #00246b;
 }
 
+/* Make the entire app take full height */
+#root, .App {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
 .App {
-    text-align: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
+/* Chat container fills remaining space */
+.chat-container {
+    flex: 1;
+    width: 100%;
+    max-width: 900px;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+/* Heading */
 h2 {
-    color: #00246b;
+    text-align: center;
+    margin-bottom: 10px;
 }
 
+/* Message list */
 ul {
     list-style-type: none;
     padding: 0;
-    max-height: 400px;
     overflow-y: auto;
-    margin-bottom: 20px;
+    flex-grow: 1;
 }
 
 li {
     background-color: #8ab6f9;
     margin: 5px auto;
     padding: 10px;
-    width: 90%;
     border-radius: 5px;
-    text-align: left;
+    width: 100%;
+    max-width: 800px;
+    box-sizing: border-box;
 }
 
+/* Timestamp styling */
 .timestamp {
     font-size: 0.8em;
     color: gray;
+    margin-top: 5px;
 }
 
+/* Input section sticks to bottom */
 .input-area {
+    width: 100%;
+    max-width: 900px;
     display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 10px;
-    margin-left: 20px;
     flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    justify-content: center;
+    align-items: center;
+    background-color: #cadcfc;
 }
 
 .input-area input[type="text"],
 .input-area input[type="file"] {
+    flex: 1;
+    min-width: 150px;
     padding: 10px;
     border: 1px solid #00246b;
     border-radius: 5px;
