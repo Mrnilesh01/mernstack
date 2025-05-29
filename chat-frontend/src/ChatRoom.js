@@ -1,86 +1,134 @@
-import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useRef } from 'react';
+import io from 'socket.io-client';
+
+const backendURL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+const socket = io(backendURL);
 
 const ChatRoom = () => {
   const [messages, setMessages] = useState([]);
-  const [name, setName] = useState('');
+  const [user, setUser] = useState('');
   const [message, setMessage] = useState('');
+  const [typingUser, setTypingUser] = useState('');
   const [file, setFile] = useState(null);
-  const chatEndRef = useRef(null);
+  const typingTimeout = useRef(null);
+  const audioRef = useRef(new Audio('/notification.mp3'));
 
   const fetchMessages = async () => {
-    const response = await axios.get('https://mernstack-chat-backend.onrender.com/messages');
-    setMessages(response.data);
-    scrollToBottom();
+    try {
+      const response = await fetch(`${backendURL}/messages`);
+      const data = await response.json();
+      setMessages(data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!user.trim() || (!message.trim() && !file)) {
+      alert("User and a message or file is required.");
+      return;
+    }
+
+    let base64File = "";
+    let fileName = "";
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        base64File = reader.result;
+        fileName = file.name;
+
+        await fetch(`${backendURL}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user, message, file: base64File, fileName }),
+        });
+
+        setMessage('');
+        setFile(null);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      await fetch(`${backendURL}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, message }),
+      });
+
+      setMessage('');
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
   };
 
   useEffect(() => {
     fetchMessages();
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
+
+    socket.on("newMessage", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+      if (audioRef.current) {
+        audioRef.current.play();
+      }
+    });
+
+    socket.on("typing", (username) => {
+      setTypingUser(username);
+      if (typingTimeout.current) {
+        clearTimeout(typingTimeout.current);
+      }
+      typingTimeout.current = setTimeout(() => setTypingUser(''), 2000);
+    });
+
+    return () => {
+      socket.off("newMessage");
+      socket.off("typing");
+    };
   }, []);
 
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const playNotification = () => {
-    const audio = new Audio('https://www.myinstants.com/media/sounds/notification.mp3');
-    audio.play();
-  };
-
-  const sendMessage = async () => {
-    if (!name || (!message && !file)) return;
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('message', message);
-    if (file) formData.append('file', file);
-
-    await axios.post('https://mernstack-chat-backend.onrender.com/messages', formData);
-    setMessage('');
-    setFile(null);
-    fetchMessages();
-    playNotification();
-  };
-
   return (
-    <div className="App">
+    <div className="chat-container">
       <h2>Chat Room</h2>
-      <div className="chat-container">
-        <ul>
-          {messages.map((msg, index) => (
-            <li key={index}>
-              <strong>{msg.name}</strong>: {msg.message}
-              <br />
-              {msg.fileUrl && (
-                <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer">
-                  Download File
-                </a>
-              )}
-              <div className="timestamp">{new Date(msg.timestamp).toLocaleTimeString()}</div>
-            </li>
-          ))}
-          <div ref={chatEndRef}></div>
-        </ul>
-      </div>
+
+      <ul>
+        {messages.map((msg) => (
+          <li key={msg._id}>
+            <strong>{msg.user}:</strong> {msg.message}
+            {msg.file && (
+              <div>
+                📎 <a href={msg.file} download={msg.fileName} target="_blank" rel="noreferrer">{msg.fileName}</a>
+              </div>
+            )}
+            <div className="timestamp">
+              {new Date(msg.createdAt).toLocaleTimeString()}
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {typingUser && <p><em>{typingUser} is typing...</em></p>}
+
       <div className="input-area">
         <input
           type="text"
           placeholder="Your name"
-          value={name}
-          onChange={e => setName(e.target.value)}
+          value={user}
+          onChange={(e) => setUser(e.target.value)}
         />
         <input
           type="text"
           placeholder="Type your message..."
           value={message}
-          onChange={e => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value);
+            socket.emit("typing", user);
+          }}
+          onKeyDown={handleKeyPress}
         />
-        <input
-          type="file"
-          onChange={e => setFile(e.target.files[0])}
-        />
+        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
         <button onClick={sendMessage}>Send</button>
       </div>
     </div>
