@@ -18,9 +18,8 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
-// ✅ FIXED: using process.env.MONGO_URL
 mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -39,13 +38,15 @@ app.get("/messages", async (req, res) => {
 
 app.post("/messages", async (req, res) => {
   try {
-    const { user, message } = req.body;
-    if (!user || !message) {
-      return res.status(400).json({ error: "User and message are required" });
+    const { user, message, file, fileName } = req.body;
+
+    if (!user || (!message && !file)) {
+      return res.status(400).json({ error: "User and message or file are required" });
     }
 
-    const chatMessage = new ChatMessage({ user, message });
+    const chatMessage = new ChatMessage({ user, message, file, fileName });
     await chatMessage.save();
+
     io.emit("newMessage", chatMessage);
     res.status(201).json(chatMessage);
   } catch (error) {
