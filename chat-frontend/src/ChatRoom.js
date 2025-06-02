@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
+import EmojiPicker from 'emoji-picker-react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const backendURL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 const socket = io(backendURL);
@@ -9,9 +12,14 @@ const ChatRoom = () => {
   const [user, setUser] = useState('');
   const [message, setMessage] = useState('');
   const [typingUser, setTypingUser] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+
   const typingTimeout = useRef(null);
   const audioRef = useRef(new Audio('/notification.mp3'));
+  const messagesEndRef = useRef(null);
 
   const fetchMessages = async () => {
     try {
@@ -20,49 +28,54 @@ const ChatRoom = () => {
       setMessages(data);
     } catch (error) {
       console.error('Error fetching messages:', error);
+      toast.error('Failed to load messages');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const toBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+    });
+
   const sendMessage = async () => {
     if (!user.trim() || (!message.trim() && !file)) {
-      alert("User and a message or file is required.");
+      alert("Please enter a message or attach a file.");
       return;
     }
 
-    let base64File = "";
-    let fileName = "";
+    const payload = {
+      user,
+      message,
+      file: file ? await toBase64(file) : null,
+      fileName: file?.name || '',
+    };
 
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        base64File = reader.result;
-        fileName = file.name;
-
-        await fetch(`${backendURL}/messages`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user, message, file: base64File, fileName }),
-        });
-
-        setMessage('');
-        setFile(null);
-      };
-      reader.readAsDataURL(file);
-    } else {
+    try {
       await fetch(`${backendURL}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user, message }),
+        body: JSON.stringify(payload),
       });
-
       setMessage('');
+      setFile(null);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message');
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      sendMessage();
-    }
+    if (e.key === 'Enter') sendMessage();
+  };
+
+  const onEmojiClick = (emojiData) => {
+    setMessage((prev) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
   };
 
   useEffect(() => {
@@ -70,16 +83,13 @@ const ChatRoom = () => {
 
     socket.on("newMessage", (msg) => {
       setMessages((prev) => [...prev, msg]);
-      if (audioRef.current) {
-        audioRef.current.play();
-      }
+      audioRef.current?.play();
+      toast.info(`New message from ${msg.user}`);
     });
 
     socket.on("typing", (username) => {
       setTypingUser(username);
-      if (typingTimeout.current) {
-        clearTimeout(typingTimeout.current);
-      }
+      if (typingTimeout.current) clearTimeout(typingTimeout.current);
       typingTimeout.current = setTimeout(() => setTypingUser(''), 2000);
     });
 
@@ -89,25 +99,44 @@ const ChatRoom = () => {
     };
   }, []);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
+    document.body.className = darkMode ? 'dark-mode' : '';
+  }, [darkMode]);
+
   return (
     <div className="chat-container">
-      <h2>Chat Room</h2>
+      <div className="header">
+        <h2>Dalvik Chat Messenger</h2>
+        <button onClick={() => setDarkMode((prev) => !prev)}>
+          {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+        </button>
+      </div>
 
-      <ul>
-        {messages.map((msg) => (
-          <li key={msg._id}>
-            <strong>{msg.user}:</strong> {msg.message}
-            {msg.file && (
+      {loading ? <p>Loading chat...</p> : (
+        <ul>
+          {messages.map((msg, index) => (
+            <li key={msg._id || index} className={msg.user === user ? 'self' : ''}>
+              <div className="avatar">{msg.user[0].toUpperCase()}</div>
               <div>
-                📎 <a href={msg.file} download={msg.fileName} target="_blank" rel="noreferrer">{msg.fileName}</a>
+                <strong>{msg.user}:</strong> {msg.message}
+                {msg.file && (
+                  <div>
+                    <a title={msg.fileName} href={msg.file} download={msg.fileName} target="_blank" rel="noopener noreferrer">
+                      📎 {msg.fileName}
+                    </a>
+                  </div>
+                )}
+                <div className="timestamp">{new Date(msg.createdAt).toLocaleTimeString()}</div>
               </div>
-            )}
-            <div className="timestamp">
-              {new Date(msg.createdAt).toLocaleTimeString()}
-            </div>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+          <div ref={messagesEndRef}></div>
+        </ul>
+      )}
 
       {typingUser && <p><em>{typingUser} is typing...</em></p>}
 
@@ -128,9 +157,19 @@ const ChatRoom = () => {
           }}
           onKeyDown={handleKeyPress}
         />
+        <button onClick={() => setShowEmojiPicker((prev) => !prev)}>😊</button>
         <input type="file" onChange={(e) => setFile(e.target.files[0])} />
         <button onClick={sendMessage}>Send</button>
       </div>
+
+      {showEmojiPicker && (
+        <div className="emoji-picker">
+          <EmojiPicker onEmojiClick={onEmojiClick} />
+        </div>
+      )}
+
+      <audio ref={audioRef} src="/notification.mp3" preload="auto" />
+      <ToastContainer position="top-right" />
     </div>
   );
 };
