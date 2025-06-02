@@ -1,14 +1,12 @@
 const mongoose = require('mongoose');
 
 const chatMessageSchema = new mongoose.Schema({
-  user: String,
+  user: { type: String, required: true },
   message: String,
   file: String,
   fileName: String,
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+}, {
+  timestamps: { createdAt: true, updatedAt: false }
 });
 
 module.exports = mongoose.model('ChatMessage', chatMessageSchema);
